@@ -8,7 +8,9 @@
 #include <atomic>
 #include <iostream>
 
-#define SERVER_ADDR "tcp://127.0.0.1:8083"
+#define SERVER_ADDR "tcp://127.0.0.1:8084"
+//#define SERVER_ADDR "tcp://192.168.32.15:8083"
+//#define SERVER_ADDR "tcp://212.116.110.46:8083"
 
 void* context;
 void* publisher;
@@ -16,7 +18,7 @@ zmq_msg_t reply;
 
 void ffc::zmqInit() {
 	context = zmq_ctx_new();
-	publisher = zmq_socket(context, ZMQ_PUB);
+	publisher = zmq_socket(context, ZMQ_XPUB);
 	zmq_bind(publisher, SERVER_ADDR);
 }
 

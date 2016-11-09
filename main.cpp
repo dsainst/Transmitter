@@ -7,13 +7,14 @@
 #define MAX_ORDER_COUNT	200
 
 //---------- Секция общей памяти -----------------
-#pragma data_seg ("shared")
+//#pragma data_seg ("shared")
 FfcOrder master_orders[MAX_ORDER_COUNT] = { 0 };
 int ordersCount = 0;
 int ordersTotal = 0;
 bool ordersValid = false;
-#pragma data_seg()
-#pragma comment(linker, "/SECTION:shared,RWS")
+int timeRestart;
+//#pragma data_seg()
+//#pragma comment(linker, "/SECTION:shared,RWS")
 //------------------------------------------------
 
 
@@ -42,10 +43,12 @@ namespace ffc {
 	void ffc_OrderUpdate(int OrderTicket, int magic, wchar_t* OrderSymbol, int orderType,
 		double OrderLots, double OrderOpenPrice, __time64_t OrderOpenTime,
 		double OrderTakeProfit, double OrderStopLoss, double  OrderClosePrice, __time64_t  OrderCloseTime,
-		__time64_t OrderExpiration, double  OrderProfit, double  OrderCommission, double  OrderSwap, wchar_t* OrderComment) {
+		__time64_t OrderExpiration, double  OrderProfit, double  OrderCommission, double  OrderSwap, wchar_t* OrderComment, int time) {
 
 		if (getComparison(master_orders, OrderTicket, OrderTakeProfit, OrderStopLoss, ordersCount))
 			needUpdate = 1;
+
+		timeRestart = time;
 
 		master_orders[ordersCount] = { OrderTicket, getMagic(OrderComment) , L"default", orderType, OrderLots, OrderOpenPrice, OrderOpenTime, OrderTakeProfit, OrderStopLoss, OrderClosePrice, OrderCloseTime, OrderExpiration, OrderProfit, OrderCommission, OrderSwap, L"" };
 
@@ -56,7 +59,7 @@ namespace ffc {
 		wcscpy_s(master_orders[ordersCount].comment, COMMENT_LENGTH, L"ffc_");
 		wcscat(master_orders[ordersCount].comment, s2);
 
-		std::wcout << "order #" << OrderTicket << " magic=" << master_orders[ordersCount].magic << " comment = " << master_orders[ordersCount].comment << "\r\n";
+		//std::wcout << "order #" << OrderTicket << " magic=" << master_orders[ordersCount].magic << " comment = " << master_orders[ordersCount].comment << "\r\n";
 		ordersCount++;
 
 	}
@@ -76,14 +79,14 @@ namespace ffc {
 		ordersCount = 0;
 		needUpdate = 0;
 		ordersTotal = num;
-		std::wcout << "ordersTotal - " << ordersTotal << "\r\n";
+		//std::wcout << "ordersTotal - " << ordersTotal << "\r\n";
 	}
 
 	void ffc_validation(bool flag) {
 		ordersValid = flag;
-		//if (needUpdate)
+		//if (needUpdate || timeRestart)
 		zmqSendOrders(master_orders, ordersCount, needUpdate, ordersValid);
-		std::wcout << "Orders validation: " << needUpdate << "\r\n";
+		//std::wcout << "Orders validation: " << timeRestart << "\r\n";
 	}
 
 	int ffc_GetTicket() { // выдаем тикет(ticket_id), о котором нам хотелось бы узнать

@@ -19,12 +19,14 @@ bool ordersValid = false;
 
 //---------- Переменные трансмиттера -------------
 bool transmitterInit = false;
+int needUpdate;
 
 namespace ffc {
 
 	bool ffc_Init() {
 		if (transmitterInit) return false;  //Повторная инициализация
 		transmitterInit = true;
+		zmqInit();
 		ordersCount = 0;
 		ordersValid = false;
 		if (AllocConsole()) {
@@ -42,6 +44,8 @@ namespace ffc {
 		double OrderTakeProfit, double OrderStopLoss, double  OrderClosePrice, __time64_t  OrderCloseTime,
 		__time64_t OrderExpiration, double  OrderProfit, double  OrderCommission, double  OrderSwap, wchar_t* OrderComment) {
 
+		if (getComparison(master_orders, OrderTicket, OrderTakeProfit, OrderStopLoss, ordersCount))
+			needUpdate = 1;
 
 		master_orders[ordersCount] = { OrderTicket, getMagic(OrderComment) , L"default", orderType, OrderLots, OrderOpenPrice, OrderOpenTime, OrderTakeProfit, OrderStopLoss, OrderClosePrice, OrderCloseTime, OrderExpiration, OrderProfit, OrderCommission, OrderSwap, L"" };
 
@@ -57,6 +61,7 @@ namespace ffc {
 
 	}
 
+
 	int ffc_OrdersTotal() {
 		std::wcout << "ffc_OrdersTotal: " << ordersTotal << "\r\n";
 		return ordersTotal;
@@ -69,14 +74,16 @@ namespace ffc {
 
 	void ffc_ordersCount(int num) {
 		ordersCount = 0;
+		needUpdate = 0;
 		ordersTotal = num;
 		std::wcout << "ordersTotal - " << ordersTotal << "\r\n";
 	}
 
 	void ffc_validation(bool flag) {
 		ordersValid = flag;
-		zmqSendOrders(master_orders);
-		std::wcout << "Orders validation: " << ordersValid << "\r\n";
+		//if (needUpdate)
+		zmqSendOrders(master_orders, ordersCount, needUpdate, ordersValid);
+		std::wcout << "Orders validation: " << needUpdate << "\r\n";
 	}
 
 	int ffc_GetTicket() { // выдаем тикет(ticket_id), о котором нам хотелось бы узнать
@@ -93,6 +100,7 @@ namespace ffc {
 
 	void ffc_DeInit() {
 		transmitterInit = false;
+		zmqDeInit();
 	}
 
 

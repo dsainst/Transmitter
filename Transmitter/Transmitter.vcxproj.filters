@@ -30,4 +30,9 @@
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Source.def">
+      <Filter>Файлы исходного кода</Filter>
+    </None>
+  </ItemGroup>
 </Project>

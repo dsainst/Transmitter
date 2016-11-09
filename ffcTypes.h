@@ -12,10 +12,8 @@ struct MqlString
 					   //Длина строки хранится по адресу *(((int*)buffer) - 1)
 	int    reserved; // 4 bytes
 };
-#pragma pack(pop,1)
 
 //Структура для передачи ордеров
-#pragma pack(push,1)
 struct MqlOrder
 {
 	int			ticket;
@@ -35,7 +33,6 @@ struct MqlOrder
 	double		swap;
 	MqlString	comment;   // 12 bytes
 };
-#pragma pack(pop,1)
 
 struct FfcOrder
 {
@@ -56,3 +53,4 @@ struct FfcOrder
 	double		swap;
 	wchar_t		comment[COMMENT_LENGTH];
 };
+#pragma pack(pop,1)

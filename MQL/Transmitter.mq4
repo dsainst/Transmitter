@@ -21,8 +21,8 @@ void ffc_OrderUpdate(int OrderTicket, int orderMagic, string OrderSymbol, int or
 void ffc_validation(int orders);
 #import
 
-int TimeRestart = 0;
-int needUpdate;
+int TimeRestart;
+int needUpdate = 1;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -34,6 +34,9 @@ int OnInit()
       Print("Timer not set");
       return(INIT_FAILED);
    }
+   
+   
+   TimeRestart = Minute();
       
    if (!ffc_Init()) {
    Print("Second run");
@@ -67,10 +70,10 @@ void OnTick()
 //+------------------------------------------------------------------+
 void OnTimer()
   {
-      int minute = Minute();
-     needUpdate = minute?minute:60 - TimeRestart;
-     if (needUpdate)
-     TimeRestart = minute;
+     //int minute = Minute();
+     //needUpdate = (minute>0)?minute - TimeRestart:60 - TimeRestart;
+     //if (needUpdate>0)
+     //TimeRestart = minute;
      int ordersCount = OrdersTotal();
      Print("count - ",ordersCount);
      ffc_ordersCount(ordersCount);

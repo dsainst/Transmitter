@@ -21,6 +21,7 @@ int timeRestart;
 //---------- Переменные трансмиттера -------------
 bool transmitterInit = false;
 int needUpdate;
+bool noCycle = true;
 
 namespace ffc {
 
@@ -77,7 +78,15 @@ namespace ffc {
 
 	void ffc_ordersCount(int num) {
 		ordersCount = 0;
-		needUpdate = 0;
+		if (ordersTotal < num)
+			needUpdate = 1;
+		else {
+			if (noCycle && num == 0) {
+				needUpdate = 1;
+				noCycle = false;
+			} else
+				needUpdate = 0;
+		}
 		ordersTotal = num;
 		//std::wcout << "ordersTotal - " << ordersTotal << "\r\n";
 	}

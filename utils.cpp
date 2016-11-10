@@ -8,7 +8,7 @@
 #include <atomic>
 #include <iostream>
 
-#define SERVER_ADDR "tcp://127.0.0.1:8084"
+#define SERVER_ADDR "tcp://*:8083"
 //#define SERVER_ADDR "tcp://192.168.32.15:8083"
 //#define SERVER_ADDR "tcp://212.116.110.46:8083"
 
@@ -18,14 +18,17 @@ zmq_msg_t reply;
 
 void ffc::zmqInit() {
 	context = zmq_ctx_new();
-	publisher = zmq_socket(context, ZMQ_XPUB);
+	publisher = zmq_socket(context, ZMQ_PUB);
 	zmq_bind(publisher, SERVER_ADDR);
 }
 
 void ffc::zmqSendOrders(FfcOrder* master_orders, int ordersCount, int update, bool flag) {
 	int v1, v2, v3; zmq_version(&v1, &v2, &v3);
 	std::wcout << "ZMQ version " << v1 << "."  << v2 << "."  << v3 << "." << "Compile " << __DATE__ << __TIME__ << "\r\n";
-	std::wcout << "ZMQ size " << ordersCount << "\r\n";
+	std::wcout << "ZMQ size " << ordersCount << "\r\n"; 
+	time_t  timev;
+	std::wcout << "ZMQ send time " << time(&timev) << "\r\n";
+	std::wcout << "ZMQ SERVER ADDRESS " << SERVER_ADDR << "\r\n";
 
 	int size = sizeof(int) * 2 + sizeof(FfcOrder)*ordersCount;
 	zmq_msg_init_size(&reply, size);

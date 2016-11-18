@@ -1,6 +1,6 @@
 #pragma once
 
-#define SYMBOL_LENGTH	8
+#define SYMBOL_LENGTH	16
 #define COMMENT_LENGTH	32
 #define MAX_ORDER_COUNT	200
 
@@ -25,6 +25,8 @@ struct FfcOrder
 	//double		swap;
 	//wchar_t		comment[COMMENT_LENGTH];
 };
+#pragma pack(pop,1)
+#pragma pack(push,1)
 struct FfcMsg
 {
 	int		validation;

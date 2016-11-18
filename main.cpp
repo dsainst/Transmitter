@@ -26,23 +26,28 @@ namespace ffc {
 			freopen("conout$", "w", stderr);
 			SetConsoleOutputCP(CP_UTF8);// GetACP());
 			SetConsoleCP(CP_UTF8);
-			std::wcout << "DLL inited.\r\n";
+			std::wcout << "DLL inited.v3.\r\n";
 		}
 		if (!zmqInit()) {
 			std::wcout << "ZMQ init error!\r\n";
 			zmqDeInit();
 			return false;
 		}
+		loadMap();
 		master.ordersCount = 0;
 		master.validation = false;
+		std::wcout << "initDone \r\n";
 		return true;  //Удачная инициализация
+
 	}
 
 	//Начало цикла обработки 
 	void ffc_ordersCount(int num) {
 		needUpdate = ordersTotal != num;   //Если предыдущее количество ордеров другое, то обновляем
+		//std::wcout << "needUpdate: (ordersTotal != num) " << needUpdate << "\r\n"; 
 		master.ordersCount = 0;
 		ordersTotal = num;
+		resetFlag();
 		//std::wcout << "ordersTotal - " << ordersTotal << "\r\n";
 	}
 
@@ -52,9 +57,12 @@ namespace ffc {
 
 		FfcOrder* order = master.orders + master.ordersCount;
 
-		needUpdate = needUpdate || order->ticket != ticket || order->tpprice != takeProfit || order->slprice != stopLoss;
+		int mapedTicket = getMap(ticket);
 
-		order->ticket		= getMap(ticket);	//Надо сделать маппинг
+		needUpdate = needUpdate || order->ticket != mapedTicket || order->tpprice != takeProfit || order->slprice != stopLoss;
+		//std::wcout << "needUpdate: (ticket tp/sl) " << needUpdate << "\r\n";
+
+		order->ticket		= mapedTicket;	//Надо сделать маппинг
 		order->magic		= getProvider(comment);
 		order->type			= opType;
 		order->lots			= lots;
@@ -75,10 +83,13 @@ namespace ffc {
 			zmqSendOrders(&master);
 			lastSession = time(NULL);
 		}
+		saveMap();
 		//std::wcout << "Orders validation: " << timeRestart << "\r\n";
+		
 	}
 
 	int ffc_GetTicket() { // выдаем тикет(ticket_id), о котором нам хотелось бы узнать
+		
 		return 0;
 	}
 

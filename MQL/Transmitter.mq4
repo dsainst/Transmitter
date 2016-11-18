@@ -15,9 +15,8 @@ void ffc_ordersCount(int orders);
 void ffc_OrderSelectError(int ticket, int error);
 int ffc_GetTicket();
 void ffc_OrderUpdate(int OrderTicket, int orderMagic, string OrderSymbol, int orderType,
-		double OrderLots, double OrderOpenPrice, datetime OrderOpenTime,
-		double OrderTakeProfit, double OrderStopLoss, double  OrderClosePrice, datetime  OrderCloseTime,
-		datetime OrderExpiration, double  OrderProfit, double  OrderCommission, double  OrderSwap, string OrderComment);
+		double OrderLots, double OrderOpenPrice, double OrderTakeProfit, double OrderStopLoss, 
+		datetime OrderExpiration, string OrderComment);
 void ffc_validation(bool is_valid);
 #import
 
@@ -30,7 +29,7 @@ int needUpdate = 1;
 int OnInit()
   {
 //--- create timer
-   if (!EventSetMillisecondTimer(10)) {
+   if (!EventSetMillisecondTimer(100)) {
       Print("Timer not set");
       return(INIT_FAILED);
    }
@@ -70,20 +69,16 @@ void OnTimer()
 	 int i;
      for (i = 0; i<ordersCount; i++) {
          if (OrderSelect(i, SELECT_BY_POS)) {
-             ffc_OrderUpdate(OrderTicket(), OrderMagicNumber(), OrderSymbol(), OrderType(), AccauntBalance() \ OrderLots(),
-               OrderOpenPrice(), OrderOpenTime(), OrderTakeProfit(), OrderStopLoss(),
-               OrderClosePrice(), OrderCloseTime(), OrderExpiration(),
-               OrderProfit(), OrderCommission(), OrderSwap(), OrderComment(),needUpdate);
+             ffc_OrderUpdate(OrderTicket(), OrderMagicNumber(), OrderSymbol(), OrderType(), AccountBalance()/OrderLots(),
+               OrderOpenPrice(), OrderTakeProfit(), OrderStopLoss(), OrderExpiration(), OrderComment());
          }
       }
       ffc_validation(ordersCount == i);
       int ticket = 0;
       while ((ticket=ffc_GetTicket())>0) {
          if (OrderSelect(ticket, SELECT_BY_TICKET)) {
-             ffc_OrderUpdate(ticket, OrderMagicNumber(), OrderSymbol(), OrderType(), OrderLots(),
-               OrderOpenPrice(), OrderOpenTime(), OrderTakeProfit(), OrderStopLoss(),
-               OrderClosePrice(), OrderCloseTime(), OrderExpiration(),
-               OrderProfit(), OrderCommission(), OrderSwap(), OrderComment());
+             ffc_OrderUpdate(ticket, OrderMagicNumber(), OrderSymbol(), OrderType(), AccountBalance()/OrderLots(),
+               OrderOpenPrice(), OrderTakeProfit(), OrderStopLoss(), OrderExpiration(), OrderComment());
          } else {
 			ffc_OrderSelectError(ticket, GetLastError());
 			Print("ticket ", ticket, " not found!!!");

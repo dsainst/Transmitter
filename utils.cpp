@@ -20,6 +20,7 @@ void* publisher;
 zmq_msg_t reply;
 std::map<int, int>	ticketMap;
 int lastNick = 0;
+bool updated = false;
 
 bool ffc::zmqInit() {
 	context = zmq_ctx_new();
@@ -39,7 +40,7 @@ void ffc::zmqSendOrders(FfcMsg* msg) {
 		zmqDeInit();
 		if (!zmqInit()) return;
 	}
-	std::wcout << "ZMQ send " << msg->ordersCount << " orders\r\n"; 
+//	std::wcout << "ZMQ send " << msg->ordersCount << " orders\r\n";
 
 	int size = sizeof(int) * 2 + sizeof(FfcOrder) * msg->ordersCount;
 	if (zmq_msg_init_size(&reply, size) != 0) {
@@ -47,7 +48,7 @@ void ffc::zmqSendOrders(FfcMsg* msg) {
 		zmqDeInit();
 		return;
 	}
-	printf("size struct FfcOrder = %d \r\n", size);
+//	printf("size struct FfcOrder = %d \r\n", size);
 	memcpy(zmq_msg_data(&reply), msg, size);
 	if (zmq_msg_send(&reply, publisher, 0) <= 0) {
 		std::wcout << "ZMQ send message error!\r\n";
@@ -84,18 +85,71 @@ int ffc::getMap(int ticket) {
 	lastNick++;
 	if (lastNick >= 4096) lastNick = 1;
 	ticketMap[ticket] = lastNick;
+	updated = true;
 	
 	return lastNick;
 }
 
+void ffc::resetFlag() {
+	updated = false;
+}
+
+void ffc::clearMap() {
+	ticketMap.clear();
+	lastNick = 0;
+}
+
 typedef std::pair<int, int> mypair;
 
+
+void ffc::saveMap() {
+	if (!updated) return;
+	std::ofstream file("C:/Users/Admin/AppData/Roaming/MetaQuotes/Terminal/50CA3DFB510CC5A8F28B48D1BF2A5702/MQL4/Experts/ticketmap.dat", std::ios::out | std::ios::binary);
+	if (!file) {
+		std::wcout << "SaveMap open error! \r\n";
+		return;
+	}
+	int mapSize = ticketMap.size();
+	file.write((char*)&mapSize, sizeof(mapSize));
+	file.write((char*)&lastNick, sizeof(lastNick));
+
+	for (auto itr = ticketMap.begin(); itr != ticketMap.end(); itr++) {
+		file.write((char*)&(itr->first), sizeof(int));
+		file.write((char*)&(itr->second), sizeof(int));
+	}
+	if (file.bad()) {
+		std::wcout << "SaveMap write file error! \r\n";
+	}
+	file.close();
+}
+
+void ffc::loadMap() {
+	std::ifstream file("C:/Users/Admin/AppData/Roaming/MetaQuotes/Terminal/50CA3DFB510CC5A8F28B48D1BF2A5702/MQL4/Experts/ticketmap.dat", std::ios::out | std::ios::binary);
+	if (file.fail()) { return; } 
+	else {
+		int mapSize = ticketMap.size();
+		file.read((char*)&mapSize, sizeof(mapSize));
+		file.read((char*)&lastNick, sizeof(lastNick));
+		std::wcout << "mapSize: " << mapSize << " - lastNick: " << lastNick << "\r\n";
+		while (1) {
+			int key, value;
+			file.read((char*)&key, sizeof(int));
+			file.read((char*)&value, sizeof(int));
+			if (file.eof()) return;
+			ticketMap[key] = value;
+			std::wcout << "Map: master ticket: " << key << " - " << value << "\r\n";
+		}
+	}
+	file.close();
+}
+
+/*
 void ffc::saveMap() {
 	std::ofstream f("ticketmap.dat", std::ios::out | std::ios::binary);
 	int mapSize = ticketMap.size();
 	f.write((char*)&mapSize, sizeof(mapSize));
 	f.write((char*)&lastNick, sizeof(lastNick));
-	std::copy(ticketMap.begin(), ticketMap.end(), std::ostream_iterator<mypair>(f));
+//	std::copy(ticketMap.begin(), ticketMap.end(), std::ostream_iterator<mypair>(f));
 	f.close();
 }
 
@@ -104,7 +158,7 @@ void ffc::loadMap() {
 	int mapSize;
 	f.read((char*)&mapSize, sizeof(mapSize));
 	f.read((char*)&lastNick, sizeof(lastNick));
-	std::copy(std::istream_iterator<mypair>(f), std::istream_iterator<mypair>(), std::inserter(ticketMap, ticketMap.begin()));
+//	std::copy(std::istream_iterator<mypair>(f), std::istream_iterator<mypair>(), std::inserter(ticketMap, ticketMap.begin()));
 	f.close();
-}
+}*/
 

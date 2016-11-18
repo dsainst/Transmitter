@@ -10,6 +10,9 @@ namespace ffc {
 	bool zmqInit();
 	void zmqDeInit();
 	int getMap(int ticket);
+	void clearMap();
 	void saveMap();
 	void loadMap();
+	void resetFlag();
+	bool getFlag();
 }

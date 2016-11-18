@@ -34,5 +34,6 @@
     <None Include="Source.def">
       <Filter>Файлы исходного кода</Filter>
     </None>
+    <None Include="..\MQL\Transmitter.mq4" />
   </ItemGroup>
 </Project>

@@ -1,36 +1,26 @@
 #include "windows.h"
-#include <ctime>
+#include <time.h>
 #include <iostream>
 #include <thread>
 #include "utils.h"
+#include <map>
 
-#define MAX_ORDER_COUNT	200
+#define TIMEOUT 60
 
-//---------- Секция общей памяти -----------------
-//#pragma data_seg ("shared")
-FfcOrder master_orders[MAX_ORDER_COUNT] = { 0 };
-int ordersCount = 0;
-int ordersTotal = 0;
-bool ordersValid = false;
-int timeRestart;
-//#pragma data_seg()
-//#pragma comment(linker, "/SECTION:shared,RWS")
-//------------------------------------------------
+FfcMsg	master;
+int		ordersTotal		= 0;
+time_t	lastSession = 0;
+int		timeRestart		= 0;
+bool	transmitterInit	= false;
+bool	needUpdate		= false;
+bool	noCycle			= true;
 
-
-//---------- Переменные трансмиттера -------------
-bool transmitterInit = false;
-int needUpdate;
-bool noCycle = true;
 
 namespace ffc {
 
 	bool ffc_Init() {
 		if (transmitterInit) return false;  //Повторная инициализация
-		transmitterInit = true;
-		zmqInit();
-		ordersCount = 0;
-		ordersValid = false;
+		transmitterInit = true;				//Защита от двойного запуска
 		if (AllocConsole()) {
 			freopen("CONOUT$", "w", stdout);
 			freopen("conout$", "w", stderr);
@@ -38,63 +28,53 @@ namespace ffc {
 			SetConsoleCP(CP_UTF8);
 			std::wcout << "DLL inited.\r\n";
 		}
+		if (!zmqInit()) {
+			std::wcout << "ZMQ init error!\r\n";
+			zmqDeInit();
+			return false;
+		}
+		master.ordersCount = 0;
+		master.validation = false;
 		return true;  //Удачная инициализация
 	}
 
-	void ffc_OrderUpdate(int OrderTicket, int magic, wchar_t* OrderSymbol, int orderType,
-		double OrderLots, double OrderOpenPrice, __time64_t OrderOpenTime,
-		double OrderTakeProfit, double OrderStopLoss, double  OrderClosePrice, __time64_t  OrderCloseTime,
-		__time64_t OrderExpiration, double  OrderProfit, double  OrderCommission, double  OrderSwap, wchar_t* OrderComment, int time) {
-
-		if (getComparison(master_orders, OrderTicket, OrderTakeProfit, OrderStopLoss, ordersCount))
-			needUpdate = 1;
-
-		timeRestart = time;
-
-		master_orders[ordersCount] = { OrderTicket, getMagic(OrderComment) , L"default", orderType, OrderLots, OrderOpenPrice, OrderOpenTime, OrderTakeProfit, OrderStopLoss, OrderClosePrice, OrderCloseTime, OrderExpiration, OrderProfit, OrderCommission, OrderSwap, L"" };
-
-		wcscpy_s(master_orders[ordersCount].symbol, SYMBOL_LENGTH, OrderSymbol);
-
-		wchar_t s2[20];
-		_itow(OrderTicket, s2, 10);
-		wcscpy_s(master_orders[ordersCount].comment, COMMENT_LENGTH, L"ffc_");
-		wcscat(master_orders[ordersCount].comment, s2);
-
-		//std::wcout << "order #" << OrderTicket << " magic=" << master_orders[ordersCount].magic << " comment = " << master_orders[ordersCount].comment << "\r\n";
-		ordersCount++;
-
-	}
-
-
-	int ffc_OrdersTotal() {
-		std::wcout << "ffc_OrdersTotal: " << ordersTotal << "\r\n";
-		return ordersTotal;
-	}
-
-	int ffc_GetOrderInfo() {
-		MqlOrder mqlGetOrder[1] = { master_orders[ordersCount].ticket, master_orders[ordersCount].magic };
-		return 1;
-	}
-
+	//Начало цикла обработки 
 	void ffc_ordersCount(int num) {
-		ordersCount = 0;
-		if (ordersTotal < num)
-			needUpdate = 1;
-		else {
-			if (noCycle && num == 0) {
-				needUpdate = 1;
-				noCycle = false;
-			} else
-				needUpdate = 0;
-		}
+		needUpdate = ordersTotal != num;   //Если предыдущее количество ордеров другое, то обновляем
+		master.ordersCount = 0;
 		ordersTotal = num;
 		//std::wcout << "ordersTotal - " << ordersTotal << "\r\n";
 	}
 
+	void ffc_OrderUpdate(int ticket, int magic, wchar_t* symbol, int opType,
+		double lots, double openPrice, double takeProfit, double stopLoss, 
+		__time64_t expiration, wchar_t* comment) {
+
+		FfcOrder* order = master.orders + master.ordersCount;
+
+		needUpdate = needUpdate || order->ticket != ticket || order->tpprice != takeProfit || order->slprice != stopLoss;
+
+		order->ticket		= getMap(ticket);	//Надо сделать маппинг
+		order->magic		= getProvider(comment);
+		order->type			= opType;
+		order->lots			= lots;
+		order->openprice	= openPrice;
+		order->tpprice		= takeProfit;
+		order->slprice		= stopLoss;
+		order->expiration	= expiration;
+
+		wcscpy_s(order->symbol, SYMBOL_LENGTH, symbol);
+
+		master.ordersCount++;
+	}
+
+	//Конец цикла передачи открытых ордеров
 	void ffc_validation(bool flag) {
-		ordersValid = flag;
-		//if (needUpdate || timeRestart)
-		zmqSendOrders(master_orders, ordersCount, needUpdate, ordersValid);
+		master.validation = flag;
+		if (needUpdate || (time(NULL) - lastSession) > TIMEOUT) {
+			zmqSendOrders(&master);
+			lastSession = time(NULL);
+		}
 		//std::wcout << "Orders validation: " << timeRestart << "\r\n";
 	}
 
@@ -102,17 +82,12 @@ namespace ffc {
 		return 0;
 	}
 
-	int ffc_OrderSelectError(int Ticket) {
-		return Ticket;
-	}
-
-	int ffc_EndSession() {
-		return true;
+	void ffc_OrderSelectError(int Ticket) {
 	}
 
 	void ffc_DeInit() {
-		transmitterInit = false;
 		zmqDeInit();
+		transmitterInit = false;
 	}
 
 

@@ -1,11 +1,15 @@
 #pragma once
-
+#include <map>
+#include <iostream>
+#include <fstream>
 #include "ffcTypes.h"
 
 namespace ffc {
-	void zmqSendOrders(FfcOrder* master_orders, int ordersCount, int update, bool flag);
-	int getMagic(wchar_t* comment);
-	void zmqInit();
+	void zmqSendOrders(FfcMsg* msg);
+	int getProvider(wchar_t* comment);
+	bool zmqInit();
 	void zmqDeInit();
-	int getComparison(FfcOrder* master_orders, int ticket, double tp, double sl, int count);
+	int getMap(int ticket);
+	void saveMap();
+	void loadMap();
 }

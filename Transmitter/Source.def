@@ -2,9 +2,7 @@ EXPORTS
 ffc_OrderUpdate
 ffc_GetTicket
 ffc_OrderSelectError
-ffc_EndSession
 ffc_ordersCount
 ffc_validation
 ffc_Init
 ffc_DeInit
-ffc_OrdersTotal

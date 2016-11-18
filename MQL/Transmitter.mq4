@@ -12,13 +12,13 @@
 bool ffc_Init();
 void ffc_DeInit();
 void ffc_ordersCount(int orders);
-int ffc_OrderSelectError(int ticket);
+void ffc_OrderSelectError(int ticket, int error);
 int ffc_GetTicket();
 void ffc_OrderUpdate(int OrderTicket, int orderMagic, string OrderSymbol, int orderType,
 		double OrderLots, double OrderOpenPrice, datetime OrderOpenTime,
 		double OrderTakeProfit, double OrderStopLoss, double  OrderClosePrice, datetime  OrderCloseTime,
-		datetime OrderExpiration, double  OrderProfit, double  OrderCommission, double  OrderSwap, string OrderComment, int TimeRestart);
-void ffc_validation(int orders);
+		datetime OrderExpiration, double  OrderProfit, double  OrderCommission, double  OrderSwap, string OrderComment);
+void ffc_validation(bool is_valid);
 #import
 
 int TimeRestart;
@@ -30,14 +30,10 @@ int needUpdate = 1;
 int OnInit()
   {
 //--- create timer
-   if (!EventSetMillisecondTimer(100)) {
+   if (!EventSetMillisecondTimer(10)) {
       Print("Timer not set");
       return(INIT_FAILED);
    }
-   
-   
-   TimeRestart = Minute();
-      
    if (!ffc_Init()) {
    Print("Second run");
    return(INIT_FAILED);
@@ -52,10 +48,9 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
   {
-  ffc_DeInit();
-//--- destroy timer
-   EventKillTimer();
-      
+	  EventKillTimer();  //—начала сносим таймер, потом деинит, не переставл€й, это важно!
+	  //TO_DO проверить завершение выполнени€ OnTimer
+	  ffc_DeInit();
   }
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
@@ -70,32 +65,28 @@ void OnTick()
 //+------------------------------------------------------------------+
 void OnTimer()
   {
-     //int minute = Minute();
-     //needUpdate = (minute>0)?minute - TimeRestart:60 - TimeRestart;
-     //if (needUpdate>0)
-     //TimeRestart = minute;
      int ordersCount = OrdersTotal();
-     Print("count - ",ordersCount);
      ffc_ordersCount(ordersCount);
-     printf(IntegerToString(ordersCount));
-      for (int i = 0; i<ordersCount; i++) {
+	 int i;
+     for (i = 0; i<ordersCount; i++) {
          if (OrderSelect(i, SELECT_BY_POS)) {
-             ffc_OrderUpdate(OrderTicket(), OrderMagicNumber(), OrderSymbol(), OrderType(), OrderLots(),
+             ffc_OrderUpdate(OrderTicket(), OrderMagicNumber(), OrderSymbol(), OrderType(), AccauntBalance() \ OrderLots(),
                OrderOpenPrice(), OrderOpenTime(), OrderTakeProfit(), OrderStopLoss(),
                OrderClosePrice(), OrderCloseTime(), OrderExpiration(),
                OrderProfit(), OrderCommission(), OrderSwap(), OrderComment(),needUpdate);
          }
       }
-      ffc_validation(ordersCount == OrdersTotal());
+      ffc_validation(ordersCount == i);
       int ticket = 0;
       while ((ticket=ffc_GetTicket())>0) {
          if (OrderSelect(ticket, SELECT_BY_TICKET)) {
              ffc_OrderUpdate(ticket, OrderMagicNumber(), OrderSymbol(), OrderType(), OrderLots(),
                OrderOpenPrice(), OrderOpenTime(), OrderTakeProfit(), OrderStopLoss(),
                OrderClosePrice(), OrderCloseTime(), OrderExpiration(),
-               OrderProfit(), OrderCommission(), OrderSwap(), OrderComment(),needUpdate);
+               OrderProfit(), OrderCommission(), OrderSwap(), OrderComment());
          } else {
-            printf("ticket_id = " + IntegerToString(ffc_OrderSelectError(ffc_GetTicket())));
+			ffc_OrderSelectError(ticket, GetLastError());
+			Print("ticket ", ticket, " not found!!!");
          }
       }
       //EventKillTimer();

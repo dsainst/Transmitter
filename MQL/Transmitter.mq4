@@ -9,7 +9,7 @@
 #property strict
 
 #import "Transmitter.dll"
-bool ffc_Init();
+bool ffc_Init(string path);
 void ffc_DeInit();
 void ffc_ordersCount(int orders);
 void ffc_OrderSelectError(int ticket, int error);
@@ -29,7 +29,7 @@ int needUpdate = 1;
 int OnInit()
   {
 //--- create timer
-   if (!EventSetMillisecondTimer(100)) {
+   if (!EventSetMillisecondTimer(10)) {
       Print("Timer not set");
       return(INIT_FAILED);
    }

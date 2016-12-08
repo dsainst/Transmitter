@@ -15,4 +15,5 @@ namespace ffc {
 	void loadMap();
 	void resetFlag();
 	bool getFlag();
+	void setMapFile(const wchar_t* line);
 }

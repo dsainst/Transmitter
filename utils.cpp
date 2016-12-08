@@ -21,6 +21,7 @@ zmq_msg_t reply;
 std::map<int, int>	ticketMap;
 int lastNick = 0;
 bool updated = false;
+char workpath[255] = { 0 };
 
 bool ffc::zmqInit() {
 	context = zmq_ctx_new();
@@ -104,7 +105,7 @@ typedef std::pair<int, int> mypair;
 
 void ffc::saveMap() {
 	if (!updated) return;
-	std::ofstream file("C:/Users/Admin/AppData/Roaming/MetaQuotes/Terminal/50CA3DFB510CC5A8F28B48D1BF2A5702/MQL4/Experts/ticketmap.dat", std::ios::out | std::ios::binary);
+	std::ofstream file(workpath, std::ios::out | std::ios::binary);
 	if (!file) {
 		std::wcout << "SaveMap open error! \r\n";
 		return;
@@ -124,7 +125,7 @@ void ffc::saveMap() {
 }
 
 void ffc::loadMap() {
-	std::ifstream file("C:/Users/Admin/AppData/Roaming/MetaQuotes/Terminal/50CA3DFB510CC5A8F28B48D1BF2A5702/MQL4/Experts/ticketmap.dat", std::ios::out | std::ios::binary);
+	std::ifstream file(workpath, std::ios::out | std::ios::binary);
 	if (file.fail()) { return; } 
 	else {
 		int mapSize = ticketMap.size();
@@ -143,22 +144,9 @@ void ffc::loadMap() {
 	file.close();
 }
 
-/*
-void ffc::saveMap() {
-	std::ofstream f("ticketmap.dat", std::ios::out | std::ios::binary);
-	int mapSize = ticketMap.size();
-	f.write((char*)&mapSize, sizeof(mapSize));
-	f.write((char*)&lastNick, sizeof(lastNick));
-//	std::copy(ticketMap.begin(), ticketMap.end(), std::ostream_iterator<mypair>(f));
-	f.close();
+void ffc::setMapFile(const wchar_t* line) {
+	if (line == nullptr) return;
+	WideCharToMultiByte(CP_ACP, 0, line, -1, &workpath[0], -1, NULL, NULL);
+	strcat_s(workpath, "/MQL4/Experts/ticketmap.dat");
 }
-
-void ffc::loadMap() {
-	std::ifstream f("ticketmap.dat", std::ios::in | std::ios::binary);
-	int mapSize;
-	f.read((char*)&mapSize, sizeof(mapSize));
-	f.read((char*)&lastNick, sizeof(lastNick));
-//	std::copy(std::istream_iterator<mypair>(f), std::istream_iterator<mypair>(), std::inserter(ticketMap, ticketMap.begin()));
-	f.close();
-}*/
 

@@ -18,8 +18,9 @@ bool	noCycle			= true;
 
 namespace ffc {
 
-	bool ffc_Init() {
+	bool ffc_Init(wchar_t* path) {
 		if (transmitterInit) return false;  //Повторная инициализация
+		setMapFile(path);
 		transmitterInit = true;				//Защита от двойного запуска
 		if (AllocConsole()) {
 			freopen("CONOUT$", "w", stdout);

@@ -78,11 +78,27 @@ int ffc::getProvider(wchar_t* comment) {
 	return _wtoi(pwc);
 }
 
-int ffc::getMap(int ticket) {
+int ffc::getTicket(wchar_t* comment) {
+	wchar_t* pwc;
+	pwc = wcstok(comment, L"#");
+	pwc = wcstok(NULL, L"#");
+	if (pwc == NULL) return 0;
+	return _wtoi(pwc);
+}
+
+int ffc::getMap(int ticket, int new_ticket) {
 	auto itr = ticketMap.find(ticket);
 	if (itr != ticketMap.end()) {	//”же есть
+		//std::wcout << "itr->second1 - " << itr->second << "\r\n";
+		if (new_ticket) {
+			//std::wcout << "itr->second2 - " << itr->second << " ticket = " << ticket << " ticket new - " << new_ticket << " ticket map end - " << "\r\n";
+			ticketMap[new_ticket]	= itr->second;
+			ticketMap.erase(ticket);
+			updated = true;
+		}
 		return itr->second;
 	}
+	if (new_ticket) return 0; // если не нашел по #from
 	lastNick++;
 	if (lastNick >= 4096) lastNick = 1;
 	ticketMap[ticket] = lastNick;
@@ -144,9 +160,11 @@ void ffc::loadMap() {
 	file.close();
 }
 
-void ffc::setMapFile(const wchar_t* line) {
+
+void ffc::setMapFile(wchar_t* line) {
 	if (line == nullptr) return;
-	WideCharToMultiByte(CP_ACP, 0, line, -1, &workpath[0], -1, NULL, NULL);
+	WideCharToMultiByte(CP_ACP, 0, line, 255, &workpath[0], 255, NULL, NULL);
 	strcat_s(workpath, "/MQL4/Experts/ticketmap.dat");
+	std::wcout << "Base path: " << workpath << "\r\n";
 }
 

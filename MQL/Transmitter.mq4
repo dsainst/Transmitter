@@ -33,7 +33,7 @@ int OnInit()
       Print("Timer not set");
       return(INIT_FAILED);
    }
-   if (!ffc_Init()) {
+   if (!ffc_Init(TerminalInfoString(TERMINAL_DATA_PATH))) {
    Print("Second run");
    return(INIT_FAILED);
    }
@@ -67,9 +67,10 @@ void OnTimer()
      int ordersCount = OrdersTotal();
      ffc_ordersCount(ordersCount);
 	 int i;
+	 double balance = AccountBalance();
      for (i = 0; i<ordersCount; i++) {
          if (OrderSelect(i, SELECT_BY_POS)) {
-             ffc_OrderUpdate(OrderTicket(), OrderMagicNumber(), OrderSymbol(), OrderType(), AccountBalance()/OrderLots(),
+             ffc_OrderUpdate(OrderTicket(), OrderMagicNumber(), OrderSymbol(), OrderType(), balance/OrderLots(),
                OrderOpenPrice(), OrderTakeProfit(), OrderStopLoss(), OrderExpiration(), OrderComment());
          }
       }
@@ -77,7 +78,7 @@ void OnTimer()
       int ticket = 0;
       while ((ticket=ffc_GetTicket())>0) {
          if (OrderSelect(ticket, SELECT_BY_TICKET)) {
-             ffc_OrderUpdate(ticket, OrderMagicNumber(), OrderSymbol(), OrderType(), AccountBalance()/OrderLots(),
+             ffc_OrderUpdate(ticket, OrderMagicNumber(), OrderSymbol(), OrderType(), balance/OrderLots(),
                OrderOpenPrice(), OrderTakeProfit(), OrderStopLoss(), OrderExpiration(), OrderComment());
          } else {
 			ffc_OrderSelectError(ticket, GetLastError());

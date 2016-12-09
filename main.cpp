@@ -55,16 +55,28 @@ namespace ffc {
 	void ffc_OrderUpdate(int ticket, int magic, wchar_t* symbol, int opType,
 		double lots, double openPrice, double takeProfit, double stopLoss, 
 		__time64_t expiration, wchar_t* comment) {
+		int provider;
+		int mapedTicket;
 
 		FfcOrder* order = master.orders + master.ordersCount;
 
-		int mapedTicket = getMap(ticket);
+		//проверка на from#, если есть то подменяем тикет, ticket_from - старый, закрытый тикет
+		int ticket_from = getTicket(comment);
+		//std::wcout << "magic - " << magic << "\r\n";
+		if (ticket_from != 0) { // если найден #from -
+			provider = 1;
+			mapedTicket = getMap(ticket_from, ticket);
+			if (!mapedTicket) mapedTicket = getMap(ticket, 0);
+		} else {
+			provider = getProvider(comment);
+			mapedTicket = getMap(ticket, 0);
+		}
 
-		needUpdate = needUpdate || order->ticket != mapedTicket || order->tpprice != takeProfit || order->slprice != stopLoss;
-		//std::wcout << "needUpdate: (ticket tp/sl) " << needUpdate << "\r\n";
+		needUpdate = needUpdate || order->ticket != mapedTicket || order->tpprice != takeProfit || order->slprice != stopLoss || order->lots != lots;
+		//std::wcout << "lots master - " << lots << "\r\n";
 
 		order->ticket		= mapedTicket;	//Надо сделать маппинг
-		order->magic		= getProvider(comment);
+		order->magic		= provider;
 		order->type			= opType;
 		order->lots			= lots;
 		order->openprice	= openPrice;

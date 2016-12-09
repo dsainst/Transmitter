@@ -62,15 +62,11 @@ namespace ffc {
 
 		//проверка на from#, если есть то подменяем тикет, ticket_from - старый, закрытый тикет
 		int ticket_from = getTicket(comment);
-		//std::wcout << "magic - " << magic << "\r\n";
-		if (ticket_from != 0) { // если найден #from -
+		if (ticket_from) {
 			provider = 1;
 			mapedTicket = getMap(ticket_from, ticket);
-			if (!mapedTicket) mapedTicket = getMap(ticket, 0);
-		} else {
-			provider = getProvider(comment);
-			mapedTicket = getMap(ticket, 0);
-		}
+		} else provider = getProvider(comment);
+		if (!mapedTicket) mapedTicket = getMap(ticket, 0);
 
 		needUpdate = needUpdate || order->ticket != mapedTicket || order->tpprice != takeProfit || order->slprice != stopLoss || order->lots != lots;
 		//std::wcout << "lots master - " << lots << "\r\n";

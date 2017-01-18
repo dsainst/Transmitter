@@ -5,7 +5,7 @@
 #include "utils.h"
 #include <map>
 
-#define TIMEOUT 60
+#define TIMEOUT 10
 
 FfcMsg	master;
 int		ordersTotal		= 0;
@@ -55,8 +55,8 @@ namespace ffc {
 	void ffc_OrderUpdate(int ticket, int magic, wchar_t* symbol, int opType,
 		double lots, double openPrice, double takeProfit, double stopLoss, 
 		__time64_t expiration, wchar_t* comment) {
-		int provider;
-		int mapedTicket;
+		int provider = 0;
+		int mapedTicket = 0;
 
 		FfcOrder* order = master.orders + master.ordersCount;
 

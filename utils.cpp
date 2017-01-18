@@ -41,7 +41,7 @@ void ffc::zmqSendOrders(FfcMsg* msg) {
 		zmqDeInit();
 		if (!zmqInit()) return;
 	}
-//	std::wcout << "ZMQ send " << msg->ordersCount << " orders\r\n";
+	//std::wcout << "ZMQ send lots " << msg->orders->lots << "\r\n";
 
 	int size = sizeof(int) * 2 + sizeof(FfcOrder) * msg->ordersCount;
 	if (zmq_msg_init_size(&reply, size) != 0) {
@@ -89,7 +89,7 @@ int ffc::getTicket(wchar_t* comment) {
 int ffc::getMap(int ticket, int new_ticket) {
 	auto itr = ticketMap.find(ticket);
 	if (itr != ticketMap.end()) {	//”же есть
-		//std::wcout << "itr->second1 - " << itr->second << "\r\n";
+		//std::wcout << "itr->second1 - " << itr->second << " ticket - " << ticket << "\r\n";
 		if (new_ticket) {
 			//std::wcout << "itr->second2 - " << itr->second << " ticket = " << ticket << " ticket new - " << new_ticket << " ticket map end - " << "\r\n";
 			ticketMap[new_ticket]	= itr->second;
@@ -102,6 +102,7 @@ int ffc::getMap(int ticket, int new_ticket) {
 	lastNick++;
 	if (lastNick >= 4096) lastNick = 1;
 	ticketMap[ticket] = lastNick;
+	//std::wcout << " ticket - " << ticket << " ticketMap[ticket] - " << ticketMap[ticket] << "\r\n";
 	updated = true;
 	
 	return lastNick;

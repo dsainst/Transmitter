@@ -76,6 +76,7 @@ namespace ffc {
 		order->type			= opType;
 		order->lots			= lots;
 		order->openprice	= openPrice;
+		order->opentime		= 0;
 		order->tpprice		= takeProfit;
 		order->slprice		= stopLoss;
 		order->expiration	= expiration;

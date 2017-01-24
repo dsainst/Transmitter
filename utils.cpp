@@ -41,7 +41,7 @@ void ffc::zmqSendOrders(FfcMsg* msg) {
 		zmqDeInit();
 		if (!zmqInit()) return;
 	}
-	//std::wcout << "ZMQ send lots " << msg->orders->lots << "\r\n";
+	//std::wcout << "ZMQ send ticket " << msg->orders->ticket << "\r\n";
 
 	int size = sizeof(int) * 2 + sizeof(FfcOrder) * msg->ordersCount;
 	if (zmq_msg_init_size(&reply, size) != 0) {

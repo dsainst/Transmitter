@@ -14,7 +14,7 @@ struct FfcOrder
 	int			type;
 	double		lots;		// Depo/Lot
 	double		openprice;
-	//__time64_t	opentime;
+	__time64_t	opentime;
 	double		tpprice;
 	double		slprice;
 	//double		closeprice;
